@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currency-converter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: currency-converter
+  template:
+    metadata:
+      labels:
+        app: currency-converter
+    spec:
+      containers:
+      - name: currency-converter
+        image: afakharany/currencyconverter:1.0
+        ports:
+        - containerPort: 5555
+        env:
+        - name: APIKEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: APIKEY
+        - name: APIHOST
+          value: "currency-conversion-and-exchange-rates.p.rapidapi.com"
+        - name: FLASK_ENV
+          value: "development"
