@@ -29,6 +29,8 @@ jobs:
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.short-sha.outputs.sha }} 
     steps:
       - uses: actions/checkout@v4
       - name: Get short SHA
@@ -95,13 +97,14 @@ jobs:
       - name: Login to Argo CD
         run: |
           argocd login $ARGOCD_SERVER --username admin --password $ARGOCD_AUTH_TOKEN
-
-      - name: Sync Argo CD Application
-        run: |
-          argocd app sync ARGOCD_APP_NAME
         env:
           ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
           ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+
+      - name: Sync Argo CD Application
+        run: |
+          argocd app sync $ARGOCD_APP_NAME
+        env:
           ARGOCD_APP_NAME: currencyconverter-production
 
 
