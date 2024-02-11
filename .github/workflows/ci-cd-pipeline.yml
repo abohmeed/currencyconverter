@@ -85,7 +85,7 @@ jobs:
           sed -i 's|image: '${{ env.DOCKER_IMAGE }}':.*|image: '${{ env.DOCKER_IMAGE }}':'"$IMAGE_TAG"'|' k8s/base/deployment.yaml
           git add k8s/base/deployment.yaml
           git commit -m "Update image version to $IMAGE_TAG"
-          git push
+          git push --set-upstream https://${{ secrets.MY_PAT }}@github.com/abohmeed/currencyconverter.git main
 
       - name: Install Argo CD CLI
         run: |
