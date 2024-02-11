@@ -3,9 +3,9 @@ kind: Ingress
 metadata:
   name: currency-converter-ingress
 spec:
-  ingressClassName: nginx
   rules:
-  - http:
+  - host: currencyconverter.local
+    http:
       paths:
       - path: /
         pathType: Prefix
@@ -14,3 +14,4 @@ spec:
             name: currency-converter-service
             port:
               number: 5555
+
