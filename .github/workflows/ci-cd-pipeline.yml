@@ -7,6 +7,9 @@ on:
     tags:
       - 'v*.*.*'
 
+env:
+  DOCKER_IMAGE: afakharany/currencyconverter
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -14,8 +17,8 @@ jobs:
       APIHOST: ${{ secrets.APIHOST }}
       APIKEY: ${{ secrets.APIKEY }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: |
@@ -27,11 +30,11 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get short SHA
         id: short-sha
         run: echo "::set-output name=sha::$(git rev-parse --short=7 ${{ github.sha }})"
-        
+
       - name: Prepare Docker Tags
         id: docker-tags
         run: |
@@ -45,22 +48,60 @@ jobs:
             TAGS="$COMMIT_SHA,latest"
           fi
           echo "DOCKER_IMAGE_TAGS=$TAGS" >> $GITHUB_ENV
-      
+
       - name: Build and Push Docker image
         run: |
-          DOCKER_IMAGE=afakharany/currencyconverter
+          DOCKER_IMAGE=${{ env.DOCKER_IMAGE }}
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}
-      
+
           # Log in to Docker Hub
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      
+
           # Build Docker image
           docker build -t $DOCKER_IMAGE .
-      
+
           # Tag and Push Docker image for each determined tag
           IFS=',' read -ra TAGS <<< "$DOCKER_IMAGE_TAGS"
           for TAG in "${TAGS[@]}"; do
             docker tag $DOCKER_IMAGE $DOCKER_IMAGE:$TAG
             docker push $DOCKER_IMAGE:$TAG
           done
+  update-deployment:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Update Deployment Image
+        run: |
+          IMAGE_TAG=${{ needs.build-and-push.outputs.sha }}
+          sed -i 's|image: '${{ env.DOCKER_IMAGE }}':.*|image: '${{ env.DOCKER_IMAGE }}':'"$IMAGE_TAG"'|' path/to/your/deployment.yaml
+          git add path/to/your/deployment.yaml
+          git commit -m "Update image version to $IMAGE_TAG"
+          git push
+
+      - name: Install Argo CD CLI
+        run: |
+          curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
+
+      - name: Login to Argo CD
+        run: |
+          argocd login $ARGOCD_SERVER --username admin --password $ARGOCD_AUTH_TOKEN
+
+      - name: Sync Argo CD Application
+        run: |
+          argocd app sync ARGOCD_APP_NAME
+        env:
+          ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+          ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+          ARGOCD_APP_NAME: currencyconverter-production
+
+
