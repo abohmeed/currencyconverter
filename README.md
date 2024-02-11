@@ -51,5 +51,7 @@ kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/downloa
 kubeseal --fetch-cert > publickey.pem
 # Using this public key, you can encrypt the Secret.yaml file 
 kubeseal --format=yaml --cert=publickey.pem < secret.yaml > sealedsecret.yaml
-# Now, you can safely commit the sealedsecret.yaml to the repository. The contents will be encrypted and the Sealed Secrets controller will decrypt them on the fly when the manifest is applied to the cluster 
+# Now, you can safely commit the sealedsecret.yaml to the repository. 
+# The contents will be encrypted and the Sealed Secrets controller will 
+# decrypt them on the fly when the manifest is applied to the cluster 
 ```
