@@ -44,7 +44,8 @@ Firsy, you will need to install the CLI tool and the controller:
 ```bash
 # Install the CLI using Home Brew
 brew install kubeseal
-# Install the controller to the cluster. You can get the latest version from https://github.com/bitnami-labs/sealed-secrets/releases
+# Install the controller to the cluster. 
+# You can get the latest version from https://github.com/bitnami-labs/sealed-secrets/releases
 kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.25.0/controller.yaml
 # You will need to get the public key to be able to enctypt Secrets
 kubeseal --fetch-cert > publickey.pem
